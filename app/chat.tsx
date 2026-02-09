@@ -22,8 +22,8 @@ type Message = {
   text: string;
 };
 
-const PRIVATE_LLM_URL = 'https://your-private-llm-api.example.com/chat';
-const PRIVATE_LLM_TOKEN = 'replace-with-your-token';
+const PRIVATE_LLM_URL = 'http://192.168.1.61:1234/v1/chat/completions';
+const PRIVATE_LLM_TOKEN = 'lm-studio';
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -54,8 +54,12 @@ export default function ChatScreen() {
           Authorization: `Bearer ${PRIVATE_LLM_TOKEN}`,
         },
         body: JSON.stringify({
-          message: text,
-          messages,
+          model: 'lmstudio',
+          messages: [
+            ...messages.map((m) => ({ role: m.role, content: m.text })),
+            { role: 'user', content: text },
+          ],
+          temperature: 0.7,
         }),
       });
 
@@ -64,7 +68,8 @@ export default function ChatScreen() {
       }
 
       const data = await response.json();
-      const assistantText = data?.reply ?? 'No reply received.';
+      const assistantText =
+        data?.choices?.[0]?.message?.content ?? 'No reply received.';
 
       setMessages((prev) => [
         ...prev,

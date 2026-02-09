@@ -3,18 +3,28 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AppThemeProvider, useAppTheme } from '@/components/theme';
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function RootNavigator() {
+  const { mode } = useAppTheme();
+  const navTheme = mode === 'somber' ? DarkTheme : DefaultTheme;
+  const statusBarStyle = mode === 'somber' ? 'light' : 'dark';
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navTheme}>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="chat" options={{ title: 'Chat' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={statusBarStyle} />
     </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AppThemeProvider>
+      <RootNavigator />
+    </AppThemeProvider>
   );
 }

@@ -11,6 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAppTheme } from '@/components/theme';
+import { ThemeToggle } from '@/components/theme-toggle';
+
 type Role = 'user' | 'assistant';
 
 type Message = {
@@ -27,6 +30,7 @@ export default function ChatScreen() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const insets = useSafeAreaInsets();
+  const { colors } = useAppTheme();
 
   const sendMessage = async () => {
     const text = input.trim();
@@ -85,50 +89,87 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.screenBg }]}
+      edges={['left', 'right', 'bottom']}
+    >
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.screenBg }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messagesContent}
-        renderItem={({ item }) => (
-          <View
-            style={[
-              styles.bubble,
-              item.role === 'user' ? styles.userBubble : styles.assistantBubble,
-            ]}
-          >
-            <Text
+        <ThemeToggle
+          style={[styles.themeToggle, { top: Math.max(12, insets.top + 6) }]}
+        />
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messagesContent}
+          renderItem={({ item }) => (
+            <View
               style={[
-                styles.bubbleText,
-                item.role === 'user' ? styles.userBubbleText : styles.assistantBubbleText,
+                styles.bubble,
+                item.role === 'user'
+                  ? [styles.userBubble, { backgroundColor: colors.chatUserBubble }]
+                  : [styles.assistantBubble, { backgroundColor: colors.chatAssistantBubble }],
               ]}
             >
-              {item.text}
+              <Text
+                style={[
+                  styles.bubbleText,
+                  item.role === 'user'
+                    ? [styles.userBubbleText, { color: colors.chatUserText }]
+                    : [styles.assistantBubbleText, { color: colors.chatAssistantText }],
+                ]}
+              >
+                {item.text}
+              </Text>
+            </View>
+          )}
+          ListEmptyComponent={
+            <Text style={[styles.emptyText, { color: colors.mutedText }]}>
+              Send a message to start.
             </Text>
-          </View>
-        )}
-        ListEmptyComponent={<Text style={styles.emptyText}>Send a message to start.</Text>}
-      />
-
-      <View style={[styles.inputRow, { paddingBottom: Math.max(10, insets.bottom) }]}>
-        <TextInput
-          style={styles.input}
-          value={input}
-          onChangeText={setInput}
-          placeholder="Type your message"
-          editable={!loading}
-          onSubmitEditing={sendMessage}
-          returnKeyType="send"
+          }
         />
-        <Pressable style={styles.sendButton} onPress={sendMessage} disabled={loading}>
-          <Text style={styles.sendText}>{loading ? '...' : 'Send'}</Text>
-        </Pressable>
-      </View>
+
+        <View
+          style={[
+            styles.inputRow,
+            {
+              paddingBottom: Math.max(10, insets.bottom),
+              backgroundColor: colors.inputBg,
+              borderTopColor: colors.divider,
+            },
+          ]}
+        >
+          <TextInput
+            style={[
+              styles.input,
+              {
+                borderColor: colors.inputBorder,
+                backgroundColor: colors.inputBg,
+                color: colors.inputText,
+              },
+            ]}
+            value={input}
+            onChangeText={setInput}
+            placeholder="Type your message"
+            placeholderTextColor={colors.inputPlaceholder}
+            editable={!loading}
+            onSubmitEditing={sendMessage}
+            returnKeyType="send"
+          />
+          <Pressable
+            style={[styles.sendButton, { backgroundColor: colors.chatUserBubble }]}
+            onPress={sendMessage}
+            disabled={loading}
+          >
+            <Text style={[styles.sendText, { color: colors.chatUserText }]}>
+              {loading ? '...' : 'Send'}
+            </Text>
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -137,11 +178,14 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f7fb',
   },
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fb',
+  },
+  themeToggle: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 5,
   },
   messagesContent: {
     padding: 16,
@@ -151,7 +195,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    color: '#64748b',
     marginTop: 24,
   },
   bubble: {
@@ -162,49 +205,39 @@ const styles = StyleSheet.create({
   },
   userBubble: {
     alignSelf: 'flex-end',
-    backgroundColor: '#0f172a',
   },
   assistantBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: '#e2e8f0',
   },
   bubbleText: {
     fontSize: 15,
     lineHeight: 20,
   },
   userBubbleText: {
-    color: '#ffffff',
   },
   assistantBubbleText: {
-    color: '#0f172a',
   },
   inputRow: {
     flexDirection: 'row',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#dbe2ea',
-    backgroundColor: '#ffffff',
     gap: 8,
   },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#ffffff',
   },
   sendButton: {
-    backgroundColor: '#0f172a',
     borderRadius: 10,
     paddingHorizontal: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendText: {
-    color: '#ffffff',
     fontWeight: '600',
   },
 });
